@@ -12,19 +12,18 @@ export async function ListGigs(req: GetGigsRequest, res: Response) {
     }
 
     if (self) {
-        const gigs = await Gig.find({ createdBy: req.user.userId });
+        // `self` means the request is for gigs that are posted by the `req.user`
+        const gigs = await Gig.find({ createdBy: req.user.userId }).populate({path: "createdBy", select: "name" });
         return res.status(200).json(gigs);
     } else {
-        const gigs = await Gig.find();
+        // if (isNaN(latitude) && isNaN(longitude)) {
+        //     return res.status(400).json({ error: "invalid coordinates provided" });
+        // }
+        // todo: We need to run a geospatial query to only list gigs that are within a 10km radius of the given user.
+        const gigs = await Gig.find().populate({path: "createdBy", select: "name" });
         return res.status(200).json(gigs);
     }
-
-    // if (isNaN(latitude) && isNaN(longitude)) {
-    //     res.status(400).json({ error: "invalid coordinates provided" });
-    // }
-
 }
-
 
 interface PostGigRequestType extends PostGigBodyType, Request {
     files: Express.Multer.File[];
@@ -42,13 +41,19 @@ export async function PostGig(req: PostGigRequest, res: Response) {
         }
     }
 
+    const gigLocation = {
+        type: "Point",
+        coordinates: [location.longitude, location.latitude],
+        name: location.name
+    }
+
     try {
         const newGig = new Gig({
             title,
             description,
             category,
             offer,
-            location,
+            location: gigLocation,
             photos,
             createdBy
         });
