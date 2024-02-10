@@ -1,0 +1,1 @@
+This file is here just so that multer does not throw an error if the folder is not found.
