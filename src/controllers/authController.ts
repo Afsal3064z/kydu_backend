@@ -41,7 +41,7 @@ export async function PostSignupUser(req: PostSignupRequest, res: Response) {
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-            res.status(400).json({ error: "Email is already in use." });
+            res.status(400).json({ error: "Email/password is invalid." });
             return;
         }
 
