@@ -1,3 +1,4 @@
+import http from 'http';
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
@@ -6,13 +7,15 @@ import morgan from 'morgan';
 
 import authRouter from './routers/authRouter.js';
 import gigRouter from './routers/gigRouter.js';
+import chatRouter from './routers/chatRouter.js';
 
 import admin from 'firebase-admin';
-import { sendNotificationToDevice } from './shared/notification.js';
+import { configSocket } from './shared/socket.js';
 
 // Inject the `.env` file into `process.env`
 dotenv.config();
 
+// Initialize Firebase
 admin.initializeApp({
     credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID as string,
@@ -32,6 +35,10 @@ mongoose.connect(process.env.MONGO_URI as string)
     });
 
 const app = express();
+
+const server = http.createServer(app);
+configSocket(server);
+
 app.disable('x-powered-by');
 if (process.env.NODE_ENV as string === 'development') {
     app.use(morgan('dev'))
@@ -47,6 +54,7 @@ app.get('/', async (_req: Request, res: Response) => {
 
 app.use("/api/", authRouter as expressRouter);
 app.use("/api/gigs", gigRouter as expressRouter);
+app.use("/api/chats", chatRouter as expressRouter);
 
 // Handle our 404.
 app.get('*', (_req: Request, res: Response) => res.sendStatus(404));
@@ -57,7 +65,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
 })
 
 const PORT: number = parseInt(process.env.PORT as string, 10) || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(" ██╗  ██╗██╗   ██╗██████╗ ██╗   ██╗");
     console.log(" ██║ ██╔╝╚██╗ ██╔╝██╔══██╗██║   ██║");
     console.log(" █████╔╝  ╚████╔╝ ██║  ██║██║   ██║");
