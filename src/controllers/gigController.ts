@@ -23,7 +23,7 @@ export async function ListGigs(req: GetGigsRequest, res: Response) {
         //     return res.status(400).json({ error: "invalid coordinates provided" });
         // }
         // todo: We need to run a geospatial query to only list gigs that are within a 10km radius of the given user.
-        const gigs = await Gig.find().populate({path: "createdBy", select: "name" });
+        const gigs = await Gig.find({ createdBy: { $not: req.user.userId }}).populate({path: "createdBy", select: "name" });
         return res.status(200).json(gigs);
     }
 }
@@ -124,6 +124,10 @@ export async function ConnectWithGig(req: PostGigConnectionRequest, res: Respons
         const gig = await Gig.findById(gigId);
         if (!gig) {
             return res.status(404).send({ error: "Gig not found." });
+        }
+
+        if (userId === gig.createdBy.toString()) {
+            return res.status(400).send({ error: "Creator cannot run the same gig. " });
         }
 
         const gigAppliedBy = await User.findById(userId);
