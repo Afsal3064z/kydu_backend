@@ -8,7 +8,9 @@ const bodySchema = z.object({
     email: z.string()
         .email(),
 
-    password: z.string()
+    password: z.string(),
+
+    fcmToken: z.string().optional()
 });
 
 type PostLoginBodyType = z.infer<typeof bodySchema>;

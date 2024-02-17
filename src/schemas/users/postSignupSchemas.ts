@@ -13,7 +13,9 @@ const bodySchema = z.object({
 
     password: z.string()
         .min(8)
-        .regex(/^[a-zA-Z0-9]{8,30}$/) // Alphanumeric, 8-30 characters
+        .regex(/^[a-zA-Z0-9]{8,30}$/), // Alphanumeric, 8-30 characters
+    
+    fcmToken: z.string().optional()
 });
 
 type PostSignupBodyType = z.infer<typeof bodySchema>;

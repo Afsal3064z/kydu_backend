@@ -12,6 +12,7 @@ interface UserAttributes {
     isVerified: boolean;
     isRunner: boolean;
     homeLocation?: HomeLocation;
+    fcmToken: string;
 }
 
 interface UserDocument extends Document, UserAttributes {}
@@ -45,6 +46,11 @@ const userSchema: Schema<UserDocument> = new Schema({
     homeLocation: {
         latitude: { type: String, required: false },
         longitude: { type: String, required: false }
+    },
+    fcmToken: {
+        type: String,
+        required: true,
+        default: ''
     }
 });
 
