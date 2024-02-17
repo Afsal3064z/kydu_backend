@@ -6,7 +6,7 @@ import { PostLoginRequest } from '../schemas/users/postLoginSchemas.js';
 import { PostSignupRequest } from '../schemas/users/postSignupSchemas.js';
 
 export async function PostLoginUser(req: PostLoginRequest, res: Response) {
-    const { email, password } = req.body;
+    const { email, password, fcmToken } = req.body;
 
     try {
         const existingUser = await User.findOne({ email });
@@ -23,6 +23,14 @@ export async function PostLoginUser(req: PostLoginRequest, res: Response) {
             return;
         }
 
+        // Update the FCM token if it has changed since last time.
+        if (fcmToken && fcmToken.length > 2) {
+            if (existingUser.fcmToken !== fcmToken) {
+                existingUser.fcmToken = fcmToken;
+                await existingUser.save();
+            }
+        }
+
         const token = jwt.sign({ userId: existingUser._id }, 'theKyduKey', { expiresIn: '30d' });
 
         console.log(`[${new Date().toLocaleTimeString().toUpperCase()}] ✨ [/login] '${email}' has been granted a login token.`)
@@ -35,7 +43,7 @@ export async function PostLoginUser(req: PostLoginRequest, res: Response) {
 }
 
 export async function PostSignupUser(req: PostSignupRequest, res: Response) {
-    const { name, email, password } = req.body;
+    const { name, email, password, fcmToken } = req.body;
 
     try {
         const existingUser = await User.findOne({ email });
@@ -50,6 +58,7 @@ export async function PostSignupUser(req: PostSignupRequest, res: Response) {
         const newUser = new User({
             name,
             email,
+            fcmToken,
             password: hashedPassword,
         });
 
