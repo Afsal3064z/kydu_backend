@@ -7,8 +7,20 @@ import morgan from 'morgan';
 import authRouter from './routers/authRouter.js';
 import gigRouter from './routers/gigRouter.js';
 
+import admin from 'firebase-admin';
+import { sendNotificationToDevice } from './shared/notification.js';
+
 // Inject the `.env` file into `process.env`
 dotenv.config();
+
+admin.initializeApp({
+    credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID as string,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL as string,
+        privateKey: (process.env.FIREBASE_PRIVATE_KEY as string)?.replace(/\\n/g, '\n'),
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL as string
+});
 
 // Connect with the database.
 mongoose.connect(process.env.MONGO_URI as string)
