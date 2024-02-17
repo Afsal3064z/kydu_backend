@@ -9,6 +9,7 @@ interface Location {
 interface GigAttributes {
     title: string;
     description: string;
+    category: string;
     createdBy: Types.ObjectId;
     createdAt?: Date;
     offer: number;
@@ -26,6 +27,10 @@ const gigSchema: Schema<GigDocument> = new Schema({
         required: true
     },
     description: {
+        type: String,
+        required: true
+    },
+    category: {
         type: String,
         required: true
     },

@@ -5,6 +5,7 @@ import { GetGigsRequest } from '../schemas/gigs/getGigsSchemas.js';
 import { PostGigBodyType, PostGigRequest } from '../schemas/gigs/postGigSchemas.js';
 import { Request, Response } from 'express';
 import { sendNotificationToDevice } from '../shared/notification.js';
+import { PostGigConnectionRequest } from '../schemas/gigs/postGigConnectionSchemas.js';
 
 export async function ListGigs(req: GetGigsRequest, res: Response) {
     const { latitude, longitude, self } = req.query;
@@ -115,7 +116,7 @@ export async function DeleteGig(req: GetGigRequest, res: Response) {
     }
 }
 
-export async function ConnectWithGig(req: Request, res: Response) {
+export async function ConnectWithGig(req: PostGigConnectionRequest, res: Response) {
     const { userId } = req.user;
     const { gigId } = req.params;
 
