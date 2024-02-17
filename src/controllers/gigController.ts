@@ -1,8 +1,10 @@
 import Gig from '../models/Gig.js';
+import User from '../models/User.js';
 import { GetGigRequest } from '../schemas/gigs/getGigSchemas.js';
 import { GetGigsRequest } from '../schemas/gigs/getGigsSchemas.js';
 import { PostGigBodyType, PostGigRequest } from '../schemas/gigs/postGigSchemas.js';
 import { Request, Response } from 'express';
+import { sendNotificationToDevice } from '../shared/notification.js';
 
 export async function ListGigs(req: GetGigsRequest, res: Response) {
     const { latitude, longitude, self } = req.query;
@@ -110,5 +112,38 @@ export async function DeleteGig(req: GetGigRequest, res: Response) {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error." });
+    }
+}
+
+export async function ConnectWithGig(req: Request, res: Response) {
+    const { userId } = req.user;
+    const { gigId } = req.params;
+
+    try {
+        const gig = await Gig.findById(gigId);
+        if (!gig) {
+            return res.status(404).send({ error: "Gig not found." });
+        }
+
+        const gigAppliedBy = await User.findById(userId);
+        if (!gigAppliedBy) {
+            return res.status(404).send({ error: "Runner not found. " });
+        }
+
+        const gigCreatedBy = await User.findById(gig.createdBy);
+        if (!gigCreatedBy) {
+            return res.status(404).send({ error: "Gig owner not found. " });
+        }
+
+        if (gigCreatedBy.fcmToken.length > 1) {
+            // A valid FCM token indicates that we can send a notification to the owner of the gig.
+            await sendNotificationToDevice(gigCreatedBy.fcmToken, "Gig Accepted", "A user wishes to run your errand.");
+        }
+
+        res.status(200).send({ message: "Connected successfully." })
+
+    } catch (err) {
+        res.status(500).send({ error: "Internal Server Error" });
+        console.error(err);
     }
 }
