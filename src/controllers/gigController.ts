@@ -153,6 +153,8 @@ export async function ConnectWithGig(req: PostGigConnectionRequest, res: Respons
             createdAt: new Date()
         });
 
+        await gigCreatedBy.save();
+
         // todo: cleanup gigCreatedBy.alerts that has exceeded 16 days.
 
         res.status(200).send({ message: "Connected successfully." })
