@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import { sendNotificationToDevice } from '../shared/notification.js';
 import { PostGigConnectionRequest } from '../schemas/gigs/postGigConnectionSchemas.js';
 import asyncHandler from 'express-async-handler';
+import { capitalize } from '../shared/utils.js';
 
 export const ListGigs = asyncHandler(_ListGigs);
 async function _ListGigs(req: GetGigsRequest, res: Response) {
@@ -159,7 +160,8 @@ async function _ConnectWithGig(req: PostGigConnectionRequest, res: Response) {
         }
 
         gigCreatedBy.alerts.push({
-            content: `Your gig has a new connection request from ${gigAppliedBy.name}`,
+            title: "Connection Request",
+            content: `Your gig has a new connection request from ${capitalize(gigAppliedBy.name)}`,
             type: "CONNECTION",
             data: `${gigAppliedBy._id}`,
             createdAt: new Date()

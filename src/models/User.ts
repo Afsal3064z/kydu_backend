@@ -6,6 +6,7 @@ interface HomeLocation {
 }
 
 interface Alert {
+    title: string;
     content: string;
     type: "CONNECTION" | "STATUS" | "MESSAGE" | "OTHER";
     data?: string;
@@ -61,6 +62,7 @@ const userSchema: Schema<UserDocument> = new Schema({
         default: ''
     },
     alerts: [{
+        title: { type: String, required: true },
         content: { type: String, required: true },
         type: { type: String, enum: ["CONNECTION", "STATUS", "MESSAGE", "OTHER"], required: true },
         data: { type: String },
