@@ -22,11 +22,13 @@ interface ChatModel extends Model<ChatDocument> {}
 const chatSchema: Schema<ChatDocument> = new Schema({
     sender: {
         type: Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: "User"
     },
     receiver: {
         type: Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: "User"
     },
     approved: {
         type: Boolean,
