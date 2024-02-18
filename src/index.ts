@@ -11,6 +11,7 @@ import chatRouter from './routers/chatRouter.js';
 
 import admin from 'firebase-admin';
 import { configSocket } from './shared/socket.js';
+import { errorMiddleware } from './middlewares/errorHandler.js';
 
 // Inject the `.env` file into `process.env`
 dotenv.config();
@@ -59,10 +60,7 @@ app.use("/api/chats", chatRouter as expressRouter);
 // Handle our 404.
 app.get('*', (_req: Request, res: Response) => res.sendStatus(404));
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-    console.error(err.stack)
-    res.status(500).json({ error: "An internal server error has occured. "});
-})
+app.use(errorMiddleware);
 
 const PORT: number = parseInt(process.env.PORT as string, 10) || 3000;
 server.listen(PORT, () => {
