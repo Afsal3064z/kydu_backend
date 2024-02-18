@@ -16,8 +16,18 @@ async function _ListChats(req: Request, res: Response) {
             { sender: userId },
             { receiver: userId }
         ]
-    }).select('-messages').lean();
-
+    })
+    .populate({
+        path: 'receiver',
+        select: 'name _id'
+    })
+    .populate({
+        path: 'sender',
+        select: 'name _id'
+    })
+    .select('-messages')
+    .lean();
+    
     res.status(200).send(chats);
 }
 
@@ -38,7 +48,16 @@ async function _GetChat(req: GetChatRequest, res: Response) {
             { sender: userId, receiver: receiverId },
             { sender: receiverId, receiver: userId }
         ]
-    }).lean();
+    })
+    .populate({
+        path: 'receiver',
+        select: 'name _id'
+    })
+    .populate({
+        path: 'sender',
+        select: 'name _id'
+    })
+    .lean();
 
     if (!chat) {
         res.status(404).send({ error: "Chat not found." });
