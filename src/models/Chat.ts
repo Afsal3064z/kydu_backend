@@ -1,7 +1,8 @@
 import mongoose, { Document, Schema, Model, Types } from 'mongoose';
 
-interface Message {
+export interface Message {
     content: string;
+    contentType: "TEXT" | "AUDIO" | "IMAGE";
     createdAt: Date;
     createdBy: Types.ObjectId;
 }
@@ -11,6 +12,7 @@ interface ChatAttributes {
     receiver: Types.ObjectId;
     messages: Message[];
     createdAt: Date;
+    approved: boolean;
 }
 
 interface ChatDocument extends Document, ChatAttributes {}
@@ -26,10 +28,16 @@ const chatSchema: Schema<ChatDocument> = new Schema({
         type: Schema.Types.ObjectId,
         required: true
     },
+    approved: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     messages: [{
         content: { type: String },
         createdAt: { type: Date, default: Date.now },
-        createdBy: { type: Schema.Types.ObjectId, ref: 'User' }
+        createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        contentType: { type: String, enum: [ "TEXT", "AUDIO", "IMAGE"], default: "TEXT" }
     }],
     createdAt: {
         type: Date,
@@ -37,7 +45,6 @@ const chatSchema: Schema<ChatDocument> = new Schema({
         default: Date.now
     }
 });
-
 
 const Chat: ChatModel = mongoose.model<ChatDocument, ChatModel>('Chat', chatSchema);
 
