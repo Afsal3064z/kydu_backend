@@ -6,8 +6,10 @@ import { PostGigBodyType, PostGigRequest } from '../schemas/gigs/postGigSchemas.
 import { Request, Response } from 'express';
 import { sendNotificationToDevice } from '../shared/notification.js';
 import { PostGigConnectionRequest } from '../schemas/gigs/postGigConnectionSchemas.js';
+import asyncHandler from 'express-async-handler';
 
-export async function ListGigs(req: GetGigsRequest, res: Response) {
+export const ListGigs = asyncHandler(_ListGigs);
+async function _ListGigs(req: GetGigsRequest, res: Response) {
     const { latitude, longitude, self } = req.query;
 
     if (latitude && longitude) {
@@ -17,14 +19,16 @@ export async function ListGigs(req: GetGigsRequest, res: Response) {
     if (self) {
         // `self` means the request is for gigs that are posted by the `req.user`
         const gigs = await Gig.find({ createdBy: req.user.userId }).populate({path: "createdBy", select: "name" });
-        return res.status(200).json(gigs);
+        res.status(200).json(gigs);
+        return;
     } else {
         // if (isNaN(latitude) && isNaN(longitude)) {
         //     return res.status(400).json({ error: "invalid coordinates provided" });
         // }
         // todo: We need to run a geospatial query to only list gigs that are within a 10km radius of the given user.
         const gigs = await Gig.find({ createdBy: { $ne: req.user.userId }}).populate({path: "createdBy", select: "name" });
-        return res.status(200).json(gigs);
+        res.status(200).json(gigs);
+        return;
     }
 }
 
@@ -32,7 +36,8 @@ interface PostGigRequestType extends PostGigBodyType, Request {
     files: Express.Multer.File[];
 }
 
-export async function PostGig(req: PostGigRequest, res: Response) {
+export const PostGig = asyncHandler(_PostGig);
+async function _PostGig(req: PostGigRequest, res: Response) {
     const { category, title, description, offer, location } = req.body;
     const createdBy = req.user.userId;
 
@@ -71,7 +76,8 @@ export async function PostGig(req: PostGigRequest, res: Response) {
     }
 }
 
-export async function GetGig(req: GetGigRequest, res: Response) {
+export const GetGig = asyncHandler(_GetGig);
+async function _GetGig(req: GetGigRequest, res: Response) {
     const { gigId } = req.params;
 
     try {
@@ -89,7 +95,8 @@ export async function GetGig(req: GetGigRequest, res: Response) {
     }
 }
 
-export async function DeleteGig(req: GetGigRequest, res: Response) {
+export const DeleteGig = asyncHandler(_DeleteGig);
+async function _DeleteGig(req: GetGigRequest, res: Response) {
     const { gigId } = req.params;
 
     try {
@@ -116,28 +123,33 @@ export async function DeleteGig(req: GetGigRequest, res: Response) {
     }
 }
 
-export async function ConnectWithGig(req: PostGigConnectionRequest, res: Response) {
+export const ConnectWithGig = asyncHandler(_ConnectWithGig);
+async function _ConnectWithGig(req: PostGigConnectionRequest, res: Response) {
     const { userId } = req.user;
     const { gigId } = req.params;
 
     try {
         const gig = await Gig.findById(gigId);
         if (!gig) {
-            return res.status(404).send({ error: "Gig not found." });
+            res.status(404).send({ error: "Gig not found." });
+            return;
         }
 
         if (userId === gig.createdBy.toString()) {
-            return res.status(400).send({ error: "Creator cannot run the same gig. " });
+            res.status(400).send({ error: "Creator cannot run the same gig. " });
+            return;
         }
 
         const gigAppliedBy = await User.findById(userId);
         if (!gigAppliedBy) {
-            return res.status(404).send({ error: "Runner not found. " });
+            res.status(404).send({ error: "Runner not found. " });
+            return;
         }
 
         const gigCreatedBy = await User.findById(gig.createdBy);
         if (!gigCreatedBy) {
-            return res.status(404).send({ error: "Gig owner not found. " });
+            res.status(404).send({ error: "Gig owner not found. " });
+            return;
         }
 
         if (gigCreatedBy.fcmToken.length > 1) {

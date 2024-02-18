@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
-import Chat from "../models/Chat.js";
+import Chat, { Message } from "../models/Chat.js";
 import mongoose from "mongoose";
 import { users } from "../shared/socket.js";
 import { PostChatRequest } from "../schemas/chat/postChatSchemas.js";
 import { GetChatRequest } from "../schemas/chat/getChatSchemas.js";
+import asyncHandler from 'express-async-handler';
 
 // GET /chats
-export async function ListChats(req: Request, res: Response) {
+export const ListChats = asyncHandler(_ListChats);
+async function _ListChats(req: Request, res: Response) {
     const { userId } = req.user;
 
     const chats = await Chat.find({ 
@@ -20,12 +22,14 @@ export async function ListChats(req: Request, res: Response) {
 }
 
 // GET /chats/:senderId/:receiverId
-export async function GetChat(req: GetChatRequest, res: Response) {
+export const GetChat = asyncHandler(_GetChat);
+async function _GetChat(req: GetChatRequest, res: Response) {
     const { senderId, receiverId } = req.params;
 
     // todo: turn this into a middleware
     if (senderId !== req.user.userId && receiverId !== req.user.userId) {
-        return res.status(401).send({ error: "Unauthorized chat" });
+        res.status(401).send({ error: "Unauthorized chat" });
+        return;
     }
 
     const chat = await Chat.findOne({
@@ -36,19 +40,22 @@ export async function GetChat(req: GetChatRequest, res: Response) {
     }).lean();
 
     if (!chat) {
-        return res.status(404).send({ error: "Chat not found." });
+        res.status(404).send({ error: "Chat not found." });
+        return;
     }
 
     res.status(200).send(chat);
 }
 
 // POST /chats/:senderId/:receiverId
-export async function SendMessageToChat(req: PostChatRequest, res: Response) {
+export const SendMessageToChat = asyncHandler(_SendMessageToChat);
+async function _SendMessageToChat(req: PostChatRequest, res: Response) {
     const { senderId, receiverId } = req.params;
     const { content } = req.body;
 
     if (senderId !== req.user.userId && receiverId !== req.user.userId) {
-        return res.status(401).send({ error: "Unauthorized chat" });
+        res.status(401).send({ error: "Unauthorized chat" });
+        return;
     }
 
     let chat = await Chat.findOne({
@@ -67,10 +74,11 @@ export async function SendMessageToChat(req: PostChatRequest, res: Response) {
         })
     }
 
-    const message = {
+    const message: Message = {
         content,
         createdAt: new Date(),
         createdBy: new mongoose.Types.ObjectId(senderId),
+        contentType: "TEXT"
     }
 
     chat.messages.push(message);
@@ -78,7 +86,7 @@ export async function SendMessageToChat(req: PostChatRequest, res: Response) {
 
     // If the recipient has an active socket connection.
     if (users.has(req.user.userId)) {
-        users.get(req.user.userId)!.emit("message", { content, createdAt: new Date(), createdBy: senderId });
+        users.get(req.user.userId)!.emit("message", { senderId, receiverId, content, createdAt: new Date(), createdBy: senderId });
     }
 
     res.status(200).send({ message: "Message successfully sent." });

@@ -5,8 +5,10 @@ import { Request, Response } from 'express';
 import { PostLoginRequest } from '../schemas/users/postLoginSchemas.js';
 import { PostSignupRequest } from '../schemas/users/postSignupSchemas.js';
 import { GetUserProfileRequest } from '../schemas/users/getUserProfileSchemas.js';
+import asyncHandler from 'express-async-handler';
 
-export async function PostLoginUser(req: PostLoginRequest, res: Response) {
+export const PostLoginUser = asyncHandler(_PostLoginUser);
+async function _PostLoginUser(req: PostLoginRequest, res: Response) {
     const { email, password, fcmToken } = req.body;
 
     try {
@@ -43,7 +45,8 @@ export async function PostLoginUser(req: PostLoginRequest, res: Response) {
     }
 }
 
-export async function PostSignupUser(req: PostSignupRequest, res: Response) {
+export const PostSignupUser = asyncHandler(_PostSignupUser);
+async function _PostSignupUser(req: PostSignupRequest, res: Response) {
     const { name, email, password, fcmToken } = req.body;
 
     try {
@@ -74,7 +77,8 @@ export async function PostSignupUser(req: PostSignupRequest, res: Response) {
     }
 }
 
-export async function GetUserProfile(req: GetUserProfileRequest, res: Response) {
+export const GetUserProfile = asyncHandler(_GetUserProfile);
+async function _GetUserProfile(req: GetUserProfileRequest, res: Response) {
     const userId = req.user.userId;
     const { alertsOnly } = req.query;
 
@@ -82,13 +86,15 @@ export async function GetUserProfile(req: GetUserProfileRequest, res: Response) 
         if (alertsOnly) {
             const alerts = await User.findById(userId).select("alerts");
             if (!alerts) {
-                return res.status(404).send({ error: "User not found."});
+                res.status(404).send({ error: "User not found."});
+                return;
             }
             res.status(200).send(alerts);
         } else {
             const user = await User.findById(userId).select('-password -alerts');
             if (!user) {
-                return res.status(404).send({ error: "User not found."});
+                res.status(404).send({ error: "User not found."});
+                return;
             }
             res.status(200).send(user);
         }
