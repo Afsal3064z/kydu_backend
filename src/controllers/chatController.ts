@@ -11,7 +11,7 @@ export const ListChats = asyncHandler(_ListChats);
 async function _ListChats(req: Request, res: Response) {
     const { userId } = req.user;
 
-    const chats = await Chat.find({ 
+    const chats = await Chat.find({
         $or: [
             { sender: userId },
             { receiver: userId }
@@ -21,21 +21,22 @@ async function _ListChats(req: Request, res: Response) {
     res.status(200).send(chats);
 }
 
-// GET /chats/:senderId/:receiverId
+// GET /chats/:receiverId
 export const GetChat = asyncHandler(_GetChat);
 async function _GetChat(req: GetChatRequest, res: Response) {
-    const { senderId, receiverId } = req.params;
+    const { userId } = req.user;
+    const { receiverId } = req.params;
 
     // todo: turn this into a middleware
-    if (senderId !== req.user.userId && receiverId !== req.user.userId) {
-        res.status(401).send({ error: "Unauthorized chat" });
+    if (receiverId === userId) {
+        res.status(400).send({ error: "Cannot chat with yourself." });
         return;
     }
 
     const chat = await Chat.findOne({
         $or: [
-            { sender: senderId, receiver: receiverId },
-            { sender: receiverId, receiver: senderId }
+            { sender: userId, receiver: receiverId },
+            { sender: receiverId, receiver: userId }
         ]
     }).lean();
 
@@ -47,28 +48,29 @@ async function _GetChat(req: GetChatRequest, res: Response) {
     res.status(200).send(chat);
 }
 
-// POST /chats/:senderId/:receiverId
+// POST /chats/:receiverId
 export const SendMessageToChat = asyncHandler(_SendMessageToChat);
 async function _SendMessageToChat(req: PostChatRequest, res: Response) {
-    const { senderId, receiverId } = req.params;
+    const { userId } = req.user;
+    const { receiverId } = req.params;
     const { content } = req.body;
 
-    if (senderId !== req.user.userId && receiverId !== req.user.userId) {
-        res.status(401).send({ error: "Unauthorized chat" });
+    if (receiverId === userId) {
+        res.status(400).send({ error: "Cannot chat with yourself." });
         return;
     }
 
     let chat = await Chat.findOne({
         $or: [
-            { sender: senderId, receiver: receiverId },
-            { sender: receiverId, receiver: senderId }
+            { sender: userId, receiver: receiverId },
+            { sender: receiverId, receiver: userId }
         ]
     });
 
     if (!chat) {
-        // If a chat is not already made, we wish to initiate one between the sender and the receiver.
+        // If a chat is not already made, we need to initiate one between the sender and the receiver.
         chat = await Chat.create({
-            sender: senderId,
+            sender: userId,
             receiver: receiverId,
             messages: []
         })
@@ -77,7 +79,7 @@ async function _SendMessageToChat(req: PostChatRequest, res: Response) {
     const message: Message = {
         content,
         createdAt: new Date(),
-        createdBy: new mongoose.Types.ObjectId(senderId),
+        createdBy: new mongoose.Types.ObjectId(userId),
         contentType: "TEXT"
     }
 
@@ -85,8 +87,8 @@ async function _SendMessageToChat(req: PostChatRequest, res: Response) {
     await chat.save();
 
     // If the recipient has an active socket connection.
-    if (users.has(req.user.userId)) {
-        users.get(req.user.userId)!.emit("message", { senderId, receiverId, content, createdAt: new Date(), createdBy: senderId });
+    if (users.has(receiverId)) {
+        users.get(receiverId)!.emit("message", { receiverId, content, createdAt: new Date(), createdBy: userId });
     }
 
     res.status(200).send({ message: "Message successfully sent." });

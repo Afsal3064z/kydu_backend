@@ -10,9 +10,6 @@ const isValidObjectId = (value: string): boolean => {
 
 /** Validates `req.params` */
 const paramsSchema = z.object({
-    senderId: z.string().refine(isValidObjectId, {
-        message: 'senderId must be a valid Mongoose ObjectId'
-    }),
     receiverId: z.string().refine(isValidObjectId, {
         message: 'receiverId must be a valid Mongoose ObjectId'
     })

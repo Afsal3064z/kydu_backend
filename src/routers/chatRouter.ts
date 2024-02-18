@@ -12,8 +12,8 @@ router.use(isLoggedIn);
 
 router.get("/", ListChats);
 
-router.get("/:senderId/:receiverId", validateParams(getChatParamsSchema), GetChat);
-router.post("/:senderId/:receiverId", validateParams(postChatParamsSchema), validateBody(postChatBodySchema), SendMessageToChat);
+router.get("/:receiverId", validateParams(getChatParamsSchema), GetChat);
+router.post("/:receiverId", validateParams(postChatParamsSchema), validateBody(postChatBodySchema), SendMessageToChat);
 // router.delete("/:senderId/:receiverId", validateParams(getChatParamsSchema), GetChat);
 
 export default router;
