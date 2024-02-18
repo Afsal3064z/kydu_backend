@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { PostLoginRequest } from '../schemas/users/postLoginSchemas.js';
 import { PostSignupRequest } from '../schemas/users/postSignupSchemas.js';
+import { GetUserProfileRequest } from '../schemas/users/getUserProfileSchemas.js';
 
 export async function PostLoginUser(req: PostLoginRequest, res: Response) {
     const { email, password, fcmToken } = req.body;
@@ -73,16 +74,26 @@ export async function PostSignupUser(req: PostSignupRequest, res: Response) {
     }
 }
 
-export async function GetUserProfile(req: Request, res: Response) {
+export async function GetUserProfile(req: GetUserProfileRequest, res: Response) {
     const userId = req.user.userId;
+    const { alertsOnly } = req.query;
 
     try {
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).send({ error: "User not found."});
+        if (alertsOnly) {
+            const alerts = await User.findById(userId).select("alerts");
+            if (!alerts) {
+                return res.status(404).send({ error: "User not found."});
+            }
+            res.status(200).send(alerts);
+        } else {
+            const user = await User.findById(userId).select('-password -alerts');
+            if (!user) {
+                return res.status(404).send({ error: "User not found."});
+            }
+            res.status(200).send(user);
         }
 
-        res.status(200).send(user);
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "An unknown error has occured." });
