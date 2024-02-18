@@ -5,6 +5,13 @@ interface HomeLocation {
     longitude?: string;
 }
 
+interface Alert {
+    content: string;
+    type: "CONNECTION" | "STATUS" | "MESSAGE" | "OTHER";
+    data?: string;
+    createdAt: Date;
+}
+
 interface UserAttributes {
     name: string;
     email: string;
@@ -13,6 +20,7 @@ interface UserAttributes {
     isRunner: boolean;
     homeLocation?: HomeLocation;
     fcmToken: string;
+    alerts: Alert[];
 }
 
 interface UserDocument extends Document, UserAttributes {}
@@ -51,7 +59,13 @@ const userSchema: Schema<UserDocument> = new Schema({
         type: String,
         required: true,
         default: ''
-    }
+    },
+    alerts: [{
+        content: { type: String, required: true },
+        type: { type: String, enum: ["CONNECTION", "STATUS", "MESSAGE", "OTHER"], required: true },
+        data: { type: String },
+        createdAt: { type: Date, default: Date.now }
+    }]
 });
 
 const User: UserModel = mongoose.model<UserDocument, UserModel>('User', userSchema);

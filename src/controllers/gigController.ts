@@ -142,8 +142,18 @@ export async function ConnectWithGig(req: PostGigConnectionRequest, res: Respons
 
         if (gigCreatedBy.fcmToken.length > 1) {
             // A valid FCM token indicates that we can send a notification to the owner of the gig.
-            await sendNotificationToDevice(gigCreatedBy.fcmToken, "Gig Accepted", "A user wishes to run your errand.");
+            await sendNotificationToDevice(gigCreatedBy.fcmToken, "Connection Request", "Your gig has a new connection request.");
+            console.log(`[notification] 📲 FCM Notification sent to '${gigCreatedBy.fcmToken.slice(6)}'`)
         }
+
+        gigCreatedBy.alerts.push({
+            content: `Your gig has a new connection request from ${gigAppliedBy.name}`,
+            type: "CONNECTION",
+            data: `${gigAppliedBy._id}`,
+            createdAt: new Date()
+        });
+
+        // todo: cleanup gigCreatedBy.alerts that has exceeded 16 days.
 
         res.status(200).send({ message: "Connected successfully." })
 
