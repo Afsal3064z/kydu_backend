@@ -13,7 +13,7 @@ const querySchema = z.object({
     longitude: z.string().optional(),
     latitude: z.string().optional(),
     // bypass: z.boolean(),
-    self: z.boolean().optional()
+    self: z.coerce.boolean().optional()
 })
 
 type GetGigsQueryType = z.infer<typeof querySchema>;
