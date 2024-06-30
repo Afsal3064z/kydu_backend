@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Kydu - Node.js API
 
 ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
@@ -64,3 +65,7 @@ This repository is currently not accepting additional feature contributions beca
 ## 📃 License
 
 This project is licensed under **AGPLv3**, see [LICENSE](LICENSE).
+=======
+# kydu_backend
+Thisi s the backend for the kydu [Flutter] application
+>>>>>>> 36005ea3c3c2d23017d1712ee6eb6c8cf1fdaf4f
